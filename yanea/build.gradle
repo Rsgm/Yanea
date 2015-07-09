@@ -15,7 +15,7 @@ version = '0.0.0'
 ext {
     sourceCompatibility = 1.8
     appName = 'Yanea'
-    description = 'Yet another java neuro evoluationary algorithm'
+    description = 'Yet another neuro evoluationary algorithm'
 }
 
 

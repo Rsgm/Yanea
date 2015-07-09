@@ -34,10 +34,12 @@ public class Parameters {
      * Chance of a mutation that modifies weights only
      */
     public static double weightMutation;
+
     /**
      * Modifier of uniform weight mutation
      */
     public static double uniformWeightModifier;
+
     /**
      * Chance of a weight mutation being completely random
      */
@@ -47,6 +49,7 @@ public class Parameters {
      * Chance of new node mutation
      */
     public static double newNode;
+
     /**
      * Chance of new gene mutation
      */
@@ -55,7 +58,8 @@ public class Parameters {
     /**
      * Number of nodes to try creating when mutating
      */
-    public static int newNodeCound;
+    public static int newNodeCount;
+
     /**
      * Number of genes to try creating when mutating
      */

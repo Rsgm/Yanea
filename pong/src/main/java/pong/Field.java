@@ -93,6 +93,6 @@ public class Field implements Screen {
 
     @Override
     public void dispose() {
-        pong.nextRound();
+        pong.create();
     }
 }

@@ -23,6 +23,7 @@ public class Pong extends Game {
 
     NeuralEvolution ai = new NeuralEvolution();
     ArrayList<Integer> scores = new ArrayList<Integer>();
+    private boolean started;
 
     public static void main(String[] args) {
         Field.width = 1200;
@@ -36,7 +37,7 @@ public class Pong extends Game {
 
         Parameters.inputNodes = Input.values().length;
         Parameters.outputNodes = outputNodes.size();
-        Parameters.initialPopulation = 10;
+        Parameters.initialPopulation = 50;
         Parameters.c1 = 1;
         Parameters.c2 = 1;
         Parameters.c3 = 0.4;
@@ -47,9 +48,9 @@ public class Pong extends Game {
         Parameters.weightMutation = 0.8;
         Parameters.uniformWeightModifier = 0.2;
         Parameters.randomMutate = 0.2;
-        Parameters.newNode = 0.10;
+        Parameters.newNode = 0.12;
         Parameters.newGene = 0.2;
-        Parameters.newNodeCound = 2;
+        Parameters.newNodeCount = 2;
         Parameters.newGeneCount = 3;
         Parameters.disabled = 0.75;
         Parameters.noCrossing = 0.05;
@@ -83,6 +84,7 @@ public class Pong extends Game {
 
     @Override
     public void create() {
+        setScreen(null);
         field = new Field(inputNodes, outputNodes, this);
 
         for (InputNode in : inputNodes) {
@@ -90,6 +92,8 @@ public class Pong extends Game {
             in.setP1(field.getP1());
             in.setP2(field.getP2());
         }
+
+        nextRound();
 
         setScreen(field);
     }
@@ -104,8 +108,11 @@ public class Pong extends Game {
         return fitness;
     }
 
-    public void nextRound() {
-        setScreen(null);
+    private void nextRound() {
+        if(!started){
+            ai.nextRound(new ArrayList<Node>(inputNodes), new ArrayList<Node>(outputNodes));
+            started = true;
+        }
 
         scores.add(getFitness());
 
@@ -115,7 +122,5 @@ public class Pong extends Game {
             clearNodes();
             ai.nextRound(new ArrayList<Node>(inputNodes), new ArrayList<Node>(outputNodes));
         }
-
-        create();
     }
 }

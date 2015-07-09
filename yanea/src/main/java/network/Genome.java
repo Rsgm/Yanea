@@ -100,7 +100,7 @@ public class Genome implements Comparable<Genome> {
             }
         }
 
-        for (int i = 0; i < Parameters.newNodeCound; i++) {
+        for (int i = 0; i < Parameters.newNodeCount; i++) {
             if (Parameters.newNode > Math.random()) {
                 mutated = mutated.mutateAddNode();
             }
@@ -133,15 +133,24 @@ public class Genome implements Comparable<Genome> {
         int in;
         int out;
 
+        findNodes:
         do {
             in = (int) (Math.random() * (hiddenNodes + Parameters.inputNodes));
             out = (int) (Math.random() * (hiddenNodes + Parameters.outputNodes) + Parameters.inputNodes);
 
-            if (in > Parameters.inputNodes - 1) {
+            if (in >= Parameters.inputNodes) {
                 in += Parameters.outputNodes;
             }
 
-        } while (in != out);
+            // check for duplicates
+            if (in != out) {
+                for (Gene g : genes) {
+                    if (in == g.getIn() && out == g.getOut()) {
+                        continue findNodes;
+                    }
+                }
+            }
+        } while (in == out);
 
         Gene gene = Gene.builder()
                 .in(in)

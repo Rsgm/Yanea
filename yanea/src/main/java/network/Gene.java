@@ -7,7 +7,7 @@ import lombok.experimental.Wither;
 
 @Value
 @Builder
-public class Gene implements Comparable<Gene>{
+public class Gene implements Comparable<Gene> {
     @NonFinal
     public static int globalInnovation;
 
