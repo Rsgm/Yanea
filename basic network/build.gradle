@@ -1,0 +1,32 @@
+apply plugin: "eclipse"
+apply plugin: "idea"
+apply plugin: "java"
+
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
+sourceSets.main.java.srcDirs = ["src/main/java/"]
+sourceSets.main.resources.srcDirs = ["src/main/resources/"]
+version = '0.0.0'
+ext {
+    sourceCompatibility = 1.8
+    appName = 'Basic Neural Network'
+    description = 'A basic neural network used for input analysis'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.projectlombok:lombok:1.16.4"
+}

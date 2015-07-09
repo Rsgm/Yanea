@@ -1,0 +1,37 @@
+apply plugin: "eclipse"
+apply plugin: "idea"
+apply plugin: "java"
+apply plugin: "application"
+
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
+sourceSets.main.java.srcDirs = ["src/main/java/"]
+sourceSets.main.resources.srcDirs = ["src/main/resources/"]
+
+mainClassName = 'speakeazy.core.SpeakEazy'
+project.ext.mainClassName = mainClassName
+version = '0.0.0'
+ext {
+    sourceCompatibility = 1.8
+    appName = 'Neural Network Visualizer'
+    description = 'GDX visualizer for a neural network'
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.projectlombok:lombok:1.16.4"
+}
