@@ -34,4 +34,8 @@ repositories {
 
 dependencies {
     compile "org.projectlombok:lombok:1.16.4"
+
+    compile 'com.badlogicgames.gdx:gdx:1.6.3'
+    compile 'com.badlogicgames.gdx:gdx-backend-lwjgl:1.6.3'
+    compile "com.badlogicgames.gdx:gdx-platform:1.6.3:natives-desktop"
 }

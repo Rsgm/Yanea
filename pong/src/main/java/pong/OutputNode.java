@@ -1,7 +1,6 @@
 package pong;
 
 import network.Connection;
-import network.Parameters;
 import network.nodes.Node;
 
 import java.util.ArrayList;
@@ -13,18 +12,20 @@ public class OutputNode implements Node {
     public double calculate() {
         double total = 0;
         for (Connection c : inputs) {
-            if (c.getNode() != this) { // an output node had its self as an input
-                double nodeValue = c.getNode().calculate() * c.getWeight();
-                total += nodeValue;
-            }
+            double nodeValue = c.getNode().calculate() * c.getWeight() + c.getOffset();
+            total += nodeValue;
         }
 
-        return total / inputs.size() > Parameters.fireNeuron ? 1 : 0;
+        if (inputs.isEmpty()) {
+            return 0;
+        }
+
+        return total / inputs.size();
     }
 
     @Override
-    public void connect(Node input, double weight) {
-        inputs.add(new Connection(input, weight));
+    public void connect(Node input, double weight, double offset) {
+        inputs.add(new Connection(input, weight, offset));
     }
 
     public void clear() {

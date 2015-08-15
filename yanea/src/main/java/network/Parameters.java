@@ -15,14 +15,18 @@ public class Parameters {
      */
     public static int initialPopulation;
 
+    /**
+     * Times to mutate the initial population
+     */
+    public static double initialSecondMutation;
+
     public static double c1;
     public static double c2;
     public static double c3;
 
     public static double delta;
     public static double epsilon;
-
-    public static double fireNeuron;
+    public static int recurrentIterations;
 
     /**
      * Percent(kind of) of unfit genomes to survive.
@@ -81,7 +85,12 @@ public class Parameters {
     public static double interSpecies;
 
     /**
-     * Times to mutate each of the initial population
+     * Chance of generating a short Memory node
      */
-    public static int initialMutation;
+    public static double memoryNodes;
+
+    /**
+     * Average length short memory remembers
+     */
+    public static int MemoryLength;
 }

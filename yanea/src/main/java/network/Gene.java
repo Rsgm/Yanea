@@ -12,12 +12,14 @@ public class Gene implements Comparable<Gene> {
     public static int globalInnovation;
 
     @Wither
-    int in;
+    Base in;
     @Wither
-    int out;
+    Base out;
 
     @Wither
     double weight;
+    @Wither
+    double offset;
     @Wither
     boolean disabled;
     @Wither
@@ -27,7 +29,6 @@ public class Gene implements Comparable<Gene> {
     public String toString() {
         return String.valueOf(innovation);
     }
-
 
     @Override
     public int compareTo(Gene gene) {

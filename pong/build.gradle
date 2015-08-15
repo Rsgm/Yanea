@@ -34,6 +34,7 @@ repositories {
 
 dependencies {
     compile project(':yanea')
+    compile project(':neural network visualizer')
 
     compile "org.projectlombok:lombok:1.16.4"
     compile 'com.badlogicgames.gdx:gdx:1.6.3'

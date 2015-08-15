@@ -26,7 +26,12 @@ public class NeuralEvolution {
         genomes:
         for (int i = 0; i < Parameters.initialPopulation; i++) {
             Genome g = Genome.builder().genes(new ArrayList<Gene>()).hiddenNodes(0).build();
+
             g = g.mutateAddGene().mutate();
+            if (Parameters.initialSecondMutation > Math.random()) {
+                g = g.mutateAddGene().mutate();
+            }
+
             population.add(g);
 
             // assign species
@@ -43,9 +48,7 @@ public class NeuralEvolution {
         }
     }
 
-    public void nextRound(ArrayList<Node> inputs, ArrayList<Node> outputs) {
-        inputs.addAll(outputs);
-
+    public Network nextRound(ArrayList<Node> inputs, ArrayList<Node> outputs) {
         while (species.get(currentSpecies).getGenomes().isEmpty()) {
             advanceCurrentGenome();
         }
@@ -57,7 +60,7 @@ public class NeuralEvolution {
         System.out.printf("Generation %d, Species %d, Genome %d\n", currentGeneration, currentSpecies, currentGenome);
         System.out.println(genome.toString());
 
-        Network network = new Network(genome, inputs); // not needed since it connects everything to the output nodes
+        return new Network(genome, inputs, outputs);
     }
 
     public void results(int fitness) {

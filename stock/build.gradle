@@ -1,6 +1,7 @@
 apply plugin: "eclipse"
 apply plugin: "idea"
 apply plugin: "java"
+apply plugin: "application"
 
 buildscript {
     repositories {
@@ -11,12 +12,16 @@ buildscript {
 
 sourceSets.main.java.srcDirs = ["src/main/java/"]
 sourceSets.main.resources.srcDirs = ["src/main/resources/"]
+
+mainClassName = 'pong.Pong'
+project.ext.mainClassName = mainClassName
 version = '0.0.0'
 ext {
     sourceCompatibility = 1.8
-    appName = 'Basic Neural Network'
-    description = 'A basic neural network used for input analysis'
+    appName = 'Pong'
+    description = 'pong'
 }
+
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.4'
@@ -28,5 +33,10 @@ repositories {
 }
 
 dependencies {
+    compile project(':yanea')
+
     compile "org.projectlombok:lombok:1.16.4"
+    compile 'com.badlogicgames.gdx:gdx:1.6.3'
+    compile 'com.badlogicgames.gdx:gdx-backend-lwjgl:1.6.3'
+    compile "com.badlogicgames.gdx:gdx-platform:1.6.3:natives-desktop"
 }

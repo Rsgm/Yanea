@@ -7,4 +7,5 @@ import network.nodes.Node;
 public class Connection {
     Node node;
     double weight;
+    double offset;
 }

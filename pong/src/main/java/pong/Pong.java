@@ -5,53 +5,57 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import network.Network;
 import network.NeuralEvolution;
 import network.Parameters;
-import network.nodes.Node;
 
 import java.util.ArrayList;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
 public class Pong extends Game {
+    public static double fireOutput;
     static int outputNodeCount;
 
-    static ArrayList<InputNode> inputNodes = new ArrayList<InputNode>();
-    static ArrayList<OutputNode> outputNodes = new ArrayList<OutputNode>();
+    static ArrayList<InputNode> inputNodes = new ArrayList<>();
+    static ArrayList<OutputNode> outputNodes = new ArrayList<>();
     Field field;
-    boolean finished;
 
     NeuralEvolution ai = new NeuralEvolution();
-    ArrayList<Integer> scores = new ArrayList<Integer>();
-    private boolean started;
+    ArrayList<Integer> scores = new ArrayList<>();
+    private Network network;
 
     public static void main(String[] args) {
         Field.width = 1200;
         Field.height = 720;
 
-        Ball.speed = 2000;
-        Paddle.speed = 2100;
+        Ball.speed = 2500;
+        Paddle.speed = 2800;
+        fireOutput = .5;
 
         outputNodeCount = 2;
         createNodes();
 
         Parameters.inputNodes = Input.values().length;
         Parameters.outputNodes = outputNodes.size();
-        Parameters.initialPopulation = 50;
+        Parameters.initialPopulation = 25;
+        Parameters.initialSecondMutation = .5;
         Parameters.c1 = 1;
-        Parameters.c2 = 1;
+        Parameters.c2 = 1.5;
         Parameters.c3 = 0.4;
         Parameters.delta = 3;
         Parameters.epsilon = 0.1;
-        Parameters.fireNeuron = 0.5;
+        Parameters.recurrentIterations = 3;
         Parameters.survivalRate = 0.9; // kill off 10% of the fit population
         Parameters.weightMutation = 0.8;
         Parameters.uniformWeightModifier = 0.2;
         Parameters.randomMutate = 0.2;
-        Parameters.newNode = 0.12;
-        Parameters.newGene = 0.2;
+        Parameters.newNode = 0.15;
+        Parameters.newGene = 0.18;
         Parameters.newNodeCount = 2;
         Parameters.newGeneCount = 3;
+        Parameters.memoryNodes = 0.25;
+        Parameters.MemoryLength = 5;
         Parameters.disabled = 0.75;
         Parameters.noCrossing = 0.05;
         Parameters.interSpecies = 0.001;
@@ -77,15 +81,19 @@ public class Pong extends Game {
     }
 
     private static void clearNodes() {
-        for (OutputNode outputNode : outputNodes) {
-            outputNode.clear();
-        }
+        outputNodes.forEach(pong.OutputNode::clear);
     }
 
     @Override
     public void create() {
+        if (network == null || scores.size() == 3) {
+            clearNodes();
+            scores.clear();
+            network = ai.nextRound(new ArrayList<>(inputNodes), new ArrayList<>(outputNodes));
+        }
+
         setScreen(null);
-        field = new Field(inputNodes, outputNodes, this);
+        field = new Field(inputNodes, this, network);
 
         for (InputNode in : inputNodes) {
             in.setBall(field.getBall());
@@ -93,13 +101,11 @@ public class Pong extends Game {
             in.setP2(field.getP2());
         }
 
-        nextRound();
-
         setScreen(field);
     }
 
     public int getFitness() {
-        int fitness = field.getBall().getHits() * 10000;
+        int fitness = field.getBall().getHits() * 1000;
 
         if (field.getP2().isWinner()) {
             fitness *= 100;
@@ -108,19 +114,14 @@ public class Pong extends Game {
         return fitness;
     }
 
-    private void nextRound() {
-        if(!started){
-            ai.nextRound(new ArrayList<Node>(inputNodes), new ArrayList<Node>(outputNodes));
-            started = true;
-        }
-
+    public void nextRound() {
         scores.add(getFitness());
+        network.clearMemory();
 
         if (scores.size() == 3) {
             ai.results((scores.get(0) + scores.get(1) + scores.get(2)) / 3);
-            scores.clear();
-            clearNodes();
-            ai.nextRound(new ArrayList<Node>(inputNodes), new ArrayList<Node>(outputNodes));
         }
+
+        create();
     }
 }

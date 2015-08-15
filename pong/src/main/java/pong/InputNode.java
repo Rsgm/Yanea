@@ -46,7 +46,7 @@ public class InputNode implements Node {
     /**
      * Input nodes may not have inputs themselves.
      */
-    public void connect(Node input, double weight) {
+    public void connect(Node input, double weight, double offset) {
         // do nothing
     }
 }

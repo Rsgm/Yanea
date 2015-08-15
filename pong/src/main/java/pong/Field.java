@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import network.Network;
 
 import java.util.ArrayList;
 
@@ -28,7 +29,7 @@ public class Field implements Screen {
 
     Ball ball;
 
-    public Field(ArrayList<InputNode> inputNodes, ArrayList<OutputNode> outputNodes, Pong pong) {
+    public Field(ArrayList<InputNode> inputNodes, Pong pong, Network network) {
         this.inputNodes = inputNodes;
         this.pong = pong;
         camera = new OrthographicCamera();
@@ -41,7 +42,7 @@ public class Field implements Screen {
         Paddle paddleR = new Paddle(pos2, Color.RED);
 
         p1 = new Follow(paddleL);
-        p2 = new AI(paddleR, outputNodes);
+        p2 = new AI(paddleR, network);
 
         ball = new Ball(p1, p2);
     }
@@ -93,6 +94,6 @@ public class Field implements Screen {
 
     @Override
     public void dispose() {
-        pong.create();
+        pong.nextRound();
     }
 }

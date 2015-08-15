@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.experimental.Wither;
+import network.nodes.NodeType;
 
 import java.util.ArrayList;
 
@@ -14,6 +15,8 @@ public class Genome implements Comparable<Genome> {
     ArrayList<Gene> genes;
     @Wither
     int hiddenNodes;
+    @Wither
+    int memoryNodes;
 
     @NonFinal
     @Wither
@@ -61,7 +64,9 @@ public class Genome implements Comparable<Genome> {
 
         return builder()
                 .genes(newGenes)
-                .hiddenNodes(Math.max(hiddenNodes, genome.getHiddenNodes())).build();
+                .hiddenNodes(Math.max(hiddenNodes, genome.getHiddenNodes()))
+                .memoryNodes(Math.max(memoryNodes, genome.getMemoryNodes()))
+                .build();
     }
 
     public Genome mutate() {
@@ -73,7 +78,8 @@ public class Genome implements Comparable<Genome> {
                 ArrayList<Gene> newGenes = new ArrayList<Gene>();
 
                 for (Gene g : genes) {
-                    newGenes.add(g.withWeight(Math.random()));
+                    double weight = Math.random();
+                    newGenes.add(g.withWeight(weight).withOffset(Math.random() * weight));
                 }
 
                 mutated.withGenes(newGenes);
@@ -82,11 +88,14 @@ public class Genome implements Comparable<Genome> {
                 double uniformModifier = (Math.random() * 2 - 1) * Parameters.uniformWeightModifier;
 
                 for (Gene g : mutated.getGenes()) {
-                    double newWeight = g.getWeight() * uniformModifier;
-                    newWeight = Math.min(0, newWeight);
-                    newWeight = Math.max(1, newWeight);
+                    double weight = g.getWeight() + uniformModifier;
+                    double offset = g.getOffset() + uniformModifier;
+                    weight = Math.min(1, weight);
+                    weight = Math.max(0, weight);
+                    offset = Math.min(1 - weight, offset);
+                    offset = Math.max(0, offset);
 
-                    newGenes.add(g.withWeight(newWeight));
+                    newGenes.add(g.withWeight(weight).withOffset(offset));
                 }
 
                 mutated.withGenes(newGenes);
@@ -116,58 +125,118 @@ public class Genome implements Comparable<Genome> {
 
         genesCopy.set(geneIndex, oldGene);
 
-        int newNode = hiddenNodes + Parameters.inputNodes + Parameters.outputNodes + 1;
+        int memoryNodes = this.memoryNodes;
+        int hiddenNodes = this.hiddenNodes;
 
-        Gene in = oldGene.withOut(newNode).withWeight(1).withInnovation(Gene.globalInnovation++);
-        Gene out = oldGene.withIn(newNode).withInnovation(Gene.globalInnovation++);
+        int nodeIndex;
+        NodeType type;
+        if (Parameters.memoryNodes > Math.random()) {
+            nodeIndex = memoryNodes;
+            type = NodeType.MEMORY;
+            memoryNodes++;
+        } else {
+            nodeIndex = hiddenNodes;
+            type = NodeType.HIDDEN;
+            hiddenNodes++;
+        }
+
+        Base base = new Base(nodeIndex, type);
+        Gene in = oldGene.withOut(base).withWeight(1).withOffset(0).withInnovation(Gene.globalInnovation++);
+        Gene out = oldGene.withIn(base).withInnovation(Gene.globalInnovation++);
 
         genesCopy.add(in);
         genesCopy.add(out);
 
-        return withGenes(genesCopy).withHiddenNodes(hiddenNodes + 1);
+        return withGenes(genesCopy).withHiddenNodes(hiddenNodes).withMemoryNodes(memoryNodes);
     }
 
     public Genome mutateAddGene() {
         ArrayList<Gene> genesCopy = new ArrayList<Gene>(genes);
 
-        int in;
-        int out;
+        Base in;
+        Base out;
 
         findNodes:
         do {
-            in = (int) (Math.random() * (hiddenNodes + Parameters.inputNodes));
-            out = (int) (Math.random() * (hiddenNodes + Parameters.outputNodes) + Parameters.inputNodes);
+            ArrayList<NodeType> inTypeList = new ArrayList<>();
+            ArrayList<NodeType> outTypeList = new ArrayList<>();
+            inTypeList.add(NodeType.INPUT);
+            outTypeList.add(NodeType.OUTPUT);
 
-            if (in >= Parameters.inputNodes) {
-                in += Parameters.outputNodes;
+            if (hiddenNodes > 0) {
+                inTypeList.add(NodeType.HIDDEN);
+                outTypeList.add(NodeType.HIDDEN);
             }
+            if (memoryNodes > 0) {
+                inTypeList.add(NodeType.MEMORY);
+                outTypeList.add(NodeType.MEMORY);
+            }
+
+
+            NodeType typeIn = inTypeList.get(((int) (Math.random() * inTypeList.size())));
+            NodeType typeOut = outTypeList.get(((int) (Math.random() * outTypeList.size())));
+
+            int indexIn = 0;
+            int indexOut = 0;
+
+            switch (typeIn) {
+                case INPUT:
+                    indexIn = (int) (Math.random() * Parameters.inputNodes);
+                    break;
+                case HIDDEN:
+                    indexIn = (int) (Math.random() * hiddenNodes);
+                    break;
+                case MEMORY:
+                    indexIn = (int) (Math.random() * memoryNodes);
+                    break;
+            }
+
+            switch (typeOut) {
+                case OUTPUT:
+                    indexOut = (int) (Math.random() * Parameters.outputNodes);
+                    break;
+                case HIDDEN:
+                    indexOut = (int) (Math.random() * hiddenNodes);
+                    break;
+                case MEMORY:
+                    indexOut = (int) (Math.random() * memoryNodes);
+                    break;
+            }
+
+            in = new Base(indexIn, typeIn);
+            out = new Base(indexOut, typeOut);
 
             // check for duplicates
             if (in != out) {
                 for (Gene g : genes) {
-                    if (in == g.getIn() && out == g.getOut()) {
+                    if (in.equals(g.getIn()) && out.equals(g.getOut())) {
                         continue findNodes;
                     }
                 }
             }
-        } while (in == out);
+        } while (in.equals(out));
 
+        double weight = Math.random();
         Gene gene = Gene.builder()
                 .in(in)
                 .out(out)
-                .weight(Math.random())
+                .weight(weight)
+                .offset(Math.random() * (1 - weight))
                 .innovation(Gene.globalInnovation++).build();
 
         genesCopy.add(gene);
         return withGenes(genesCopy);
     }
 
-    private double ancestralWeightDiff(ArrayList<Gene> a, ArrayList<Gene> b) {
+    private double ancestralDiff(ArrayList<Gene> a, ArrayList<Gene> b) {
         double totalDifference = 0;
         int ancestralGenes = 0;
 
         while (!a.isEmpty() && !b.isEmpty() && a.get(0).getInnovation() == b.get(0).getInnovation()) {
-            totalDifference += b.remove(0).getWeight() - a.remove(0).getWeight();
+            Gene ag = a.remove(0);
+            Gene bg = b.remove(0);
+            totalDifference += bg.getWeight() - ag.getWeight();
+            totalDifference += bg.getOffset() - ag.getOffset();
             ancestralGenes++;
         }
 
@@ -175,7 +244,7 @@ public class Genome implements Comparable<Genome> {
             return 0;
         }
 
-        return totalDifference / ancestralGenes;
+        return totalDifference / (ancestralGenes * 2);
     }
 
     private ArrayList<Gene> ancestralGenes(ArrayList<Gene> a, ArrayList<Gene> b) {
@@ -230,7 +299,7 @@ public class Genome implements Comparable<Genome> {
         ArrayList<Gene> a = new ArrayList<Gene>(genes);
         ArrayList<Gene> b = new ArrayList<Gene>(other.getGenes());
 
-        double w = ancestralWeightDiff(a, b);
+        double w = ancestralDiff(a, b);
         int d = disjointGenes(a, b).size();
         int e = excessGenes(a, b).size();
 
@@ -258,7 +327,8 @@ public class Genome implements Comparable<Genome> {
     @Override
     public String toString() {
         return "Genome{" +
-               "hiddenNodes=" + hiddenNodes +
+               "hidden=" + hiddenNodes +
+               ", memory=" + memoryNodes +
                ", genes=" + genes +
                '}';
     }

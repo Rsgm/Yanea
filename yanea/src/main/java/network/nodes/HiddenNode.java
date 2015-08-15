@@ -10,7 +10,6 @@ import java.util.ArrayList;
 public class HiddenNode implements Node {
     private ArrayList<Connection> inputs = new ArrayList<Connection>();
 
-
     double lastValue;
     boolean equilibrium;
     boolean undefined;
@@ -18,27 +17,37 @@ public class HiddenNode implements Node {
     @Override
     public double calculate() {
         undefined = true;
+
         if (equilibrium) {
             return lastValue;
+        } else if (inputs.isEmpty()) {
+            return 0;
         }
 
-        double total = 0;
-        for (Connection c : inputs) {
-            if (c.getNode() != this) {
-                if (!(c.getNode() instanceof HiddenNode) || !((HiddenNode) c.getNode()).isUndefined()) {
-                    total += c.getNode().calculate() * c.getWeight();
+        for (int i = 0; i < Parameters.recurrentIterations; i++) {
+            double total = 0;
+            for (Connection c : inputs) {
+                boolean undefinedHidden = c.getNode() instanceof HiddenNode && ((HiddenNode) c.getNode()).isUndefined();
+
+                if (!undefinedHidden) {
+                    total += c.getNode().calculate() * c.getWeight() + c.getOffset();
                 }
             }
+
+            equilibrium = total / inputs.size() <= lastValue + Parameters.epsilon || total / inputs.size() >= lastValue - Parameters.epsilon;
+            lastValue = total / inputs.size();
         }
 
-        equilibrium = total <= lastValue + Parameters.epsilon || total >= lastValue - Parameters.epsilon;
-        lastValue = total;
-
-        return total / inputs.size() > Parameters.fireNeuron ? 1 : 0;
+        undefined = false;
+        return lastValue;
     }
 
     @Override
-    public void connect(Node input, double weight) {
-        inputs.add(new Connection(input, weight));
+    public void connect(Node input, double weight, double offset) {
+        inputs.add(new Connection(input, weight, offset));
+    }
+
+    public void reset() {
+
     }
 }
